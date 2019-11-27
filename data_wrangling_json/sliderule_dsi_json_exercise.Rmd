@@ -1,0 +1,149 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.1'
+      jupytext_version: 1.1.7
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+# JSON examples and exercise
+****
++ get familiar with packages for dealing with JSON
++ study examples with JSON strings and files 
++ work on exercise to be completed and submitted 
+****
++ reference: http://pandas.pydata.org/pandas-docs/stable/io.html#io-json-reader
+****
+
+```{python}
+import pandas as pd
+```
+
+## imports for Python, Pandas
+
+```{python}
+import json
+from pandas.io.json import json_normalize
+```
+
+## JSON example, with string
+
++ demonstrates creation of normalized dataframes (tables) from nested json string
++ source: http://pandas.pydata.org/pandas-docs/stable/io.html#normalization
+
+```{python}
+# define json string
+data = [{'state': 'Florida', 
+         'shortname': 'FL',
+         'info': {'governor': 'Rick Scott'},
+         'counties': [{'name': 'Dade', 'population': 12345},
+                      {'name': 'Broward', 'population': 40000},
+                      {'name': 'Palm Beach', 'population': 60000}]},
+        {'state': 'Ohio',
+         'shortname': 'OH',
+         'info': {'governor': 'John Kasich'},
+         'counties': [{'name': 'Summit', 'population': 1234},
+                      {'name': 'Cuyahoga', 'population': 1337}]}]
+```
+
+```{python}
+# use normalization to create tables from nested element
+json_normalize(data, 'counties')
+```
+
+```{python}
+# further populate tables created from nested element
+json_normalize(data, 'counties', ['state', 'shortname', ['info', 'governor']])
+```
+
+****
+## JSON example, with file
+
++ demonstrates reading in a json file as a string and as a table
++ uses small sample file containing data about projects funded by the World Bank 
+
+```{python}
+# load json as string
+json.load((open('data/world_bank_projects_less.json')))
+```
+
+```{python}
+# load as Pandas dataframe
+sample_json_df = pd.read_json('data/world_bank_projects_less.json')
+
+```
+
+****
+## JSON exercise
+
+Using data in file 'data/world_bank_projects.json' and the techniques demonstrated above,
+1. Find the 10 countries with most projects
+2. Find the top 10 major project themes (using column 'mjtheme_namecode')
+3. In 2. above you will notice that some entries have only the code and the name is missing. Create a dataframe with the missing names filled in.
+
+```{python}
+json_data = json.load((open('data/world_bank_projects.json')))
+json
+```
+
+```{python}
+world_bank_df = json_normalize(json_data)
+world_bank_df.head()
+```
+
+```{python}
+# Checking the json structure
+structure = json_data[0]
+
+```
+
+```{python}
+country_project=json_normalize(json_data,['sector'],['countryname','project_name'])
+
+```
+
+```{python}
+country_project.head()
+```
+
+```{python}
+# 10 countries with the most projects 
+country_project.countryname.value_counts()[:10]
+```
+
+```{python}
+themes = json_normalize(json_data,'mjtheme_namecode', ['mjthemecode'])
+```
+
+```{python}
+themes.head(10)
+```
+
+```{python}
+# top 10 major project themes 
+themes.code.value_counts()[:10]
+```
+
+```{python}
+import numpy as np
+themes.replace('', np.NaN, inplace=True)
+```
+
+```{python}
+themes["name"].fillna( method ='ffill', inplace = True) 
+```
+
+```{python}
+#Dataframe with missing names filled in
+themes.head(20)
+```
+
+```{python}
+
+```
