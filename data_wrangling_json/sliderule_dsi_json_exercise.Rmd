@@ -88,24 +88,24 @@ Using data in file 'data/world_bank_projects.json' and the techniques demonstrat
 3. In 2. above you will notice that some entries have only the code and the name is missing. Create a dataframe with the missing names filled in.
 
 ```{python}
+# Loading the json data 
 json_data = json.load((open('data/world_bank_projects.json')))
-json
 ```
 
 ```{python}
+# Checking out the raw normalized json 
 world_bank_df = json_normalize(json_data)
-world_bank_df.head()
+world_bank_df.head(2)
 ```
 
 ```{python}
 # Checking the json structure
 structure = json_data[0]
-
 ```
 
 ```{python}
+# Creating a dataframe of projects and corresponding countries
 country_project=json_normalize(json_data,['sector'],['countryname','project_name'])
-
 ```
 
 ```{python}
@@ -113,12 +113,13 @@ country_project.head()
 ```
 
 ```{python}
-# 10 countries with the most projects 
+# Top 10 countries with the most projects 
 country_project.countryname.value_counts()[:10]
 ```
 
 ```{python}
-themes = json_normalize(json_data,'mjtheme_namecode', ['mjthemecode'])
+# Creating a dataframe of theme name and code
+themes = json_normalize(json_data,'mjtheme_namecode')
 ```
 
 ```{python}
@@ -126,24 +127,72 @@ themes.head(10)
 ```
 
 ```{python}
-# top 10 major project themes 
+# Top 10 major project themes 
 themes.code.value_counts()[:10]
 ```
 
 ```{python}
+# For question 3, we replace all empty strings with np.nan in place 
 import numpy as np
-themes.replace('', np.NaN, inplace=True)
+themes.replace('', np.nan, inplace=True)
 ```
 
 ```{python}
-themes["name"].fillna( method ='ffill', inplace = True) 
+# Dropping all missing values from the whole dataframe
+themes_no_na= themes.dropna()
 ```
 
 ```{python}
-#Dataframe with missing names filled in
-themes.head(20)
+themes_no_na.head()
 ```
 
 ```{python}
+# Extracting the unique values for names 
+names = themes_no_na['name'].unique()
+```
 
+```{python}
+names
+```
+
+```{python}
+# Extracting the unique values for codes
+code_list = themes_no_na['code'].unique()
+code_list
+```
+
+```{python}
+# Zip the two lists together, the order is preserved 
+code_names = list(zip(code_list,names))
+```
+
+```{python}
+# Print the list of tuples 
+code_names
+```
+
+```{python}
+# Defining a function that checks and fills missing names
+def fill_name(x):
+    '''Checks the name corresponding to the code in the global code_names tuple list, compares it with 
+    the code column of the dataframe and returns the name corresponding to that code.'''
+    global code_names
+    for code, name in code_names:
+        if x == code:
+            return name
+        
+```
+
+```{python}
+# Applying fill_name to the 'name' column
+themes['name'] = themes['code'].apply(fill_name)    
+```
+
+```{python}
+themes.head()
+```
+
+```{python}
+# Top 10 major projects by name 
+themes.name.value_counts()[:10]
 ```
