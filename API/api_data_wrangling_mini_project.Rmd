@@ -1,0 +1,191 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.1'
+      jupytext_version: 1.1.7
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+This exercise will require you to pull some data from the Qunadl API. Qaundl is currently the most widely used aggregator of financial market data.
+
+
+As a first step, you will need to register a free account on the http://www.quandl.com website.
+
+
+After you register, you will be provided with a unique API key, that you should store:
+
+```{python}
+# Store the API key as a string - according to PEP8, constants are always named in all upper case
+API_KEY = '9_y5X_mWA3Gx-pYtdNt7'
+```
+
+Qaundl has a large number of data sources, but, unfortunately, most of them require a Premium subscription. Still, there are also a good number of free datasets.
+
+
+For this mini project, we will focus on equities data from the Frankfurt Stock Exhange (FSE), which is available for free. We'll try and analyze the stock prices of a company called Carl Zeiss Meditec, which manufactures tools for eye examinations, as well as medical lasers for laser eye surgery: https://www.zeiss.com/meditec/int/home.html. The company is listed under the stock ticker AFX_X.
+
+
+You can find the detailed Quandl API instructions here: https://docs.quandl.com/docs/time-series
+
+
+While there is a dedicated Python package for connecting to the Quandl API, we would prefer that you use the *requests* package, which can be easily downloaded using *pip* or *conda*. You can find the documentation for the package here: http://docs.python-requests.org/en/master/ 
+
+
+Finally, apart from the *requests* package, you are encouraged to not use any third party Python packages, such as *pandas*, and instead focus on what's available in the Python Standard Library (the *collections* module might come in handy: https://pymotw.com/3/collections/ ).
+Also, since you won't have access to DataFrames, you are encouraged to us Python's native data structures - preferably dictionaries, though some questions can also be answered using lists.
+You can read more on these data structures here: https://docs.python.org/3/tutorial/datastructures.html
+
+
+Keep in mind that the JSON responses you will be getting from the API map almost one-to-one to Python's dictionaries. Unfortunately, they can be very nested, so make sure you read up on indexing dictionaries in the documentation provided above.
+
+```{python}
+# First, import the relevant modules
+import requests
+import json
+import math
+```
+
+```{python}
+# Now, call the Quandl API and pull out a small sample of the data (only one day) to get a glimpse
+# into the JSON structure that will be returned
+r = requests.get('https://www.quandl.com/api/v3/datasets/FSE/AFX_X/data.json?&'+API_KEY)
+
+```
+
+```{python}
+# Inspect the JSON structure of the object you created, and take note of how nested it is,
+# as well as the overall structure
+print(r.json()['dataset_data']['data'][0])
+```
+
+```{python}
+print(r.json()['dataset_data']['column_names'])
+```
+
+These are your tasks for this mini project:
+
+1. Collect data from the Franfurt Stock Exchange, for the ticker AFX_X, for the whole year 2017 (keep in mind that the date format is YYYY-MM-DD).
+2. Convert the returned JSON object into a Python dictionary.
+3. Calculate what the highest and lowest opening prices were for the stock in this period.
+4. What was the largest change in any one day (based on High and Low price)?
+5. What was the largest change between any two days (based on Closing Price)?
+6. What was the average daily trading volume during this year?
+7. (Optional) What was the median trading volume during this year. (Note: you may need to implement your own function for calculating the median.)
+
+```{python}
+# Collect data from the Franfurt Stock Exchange, for the ticker AFX_X, for the whole year 2017 (keep in mind that the date format is YYYY-MM-DD)
+r = requests.get('https://www.quandl.com/api/v3/datasets/FSE/AFX_X/data.json?start_date=2017-01-01&end_date=2017-12-31&api_key=9_y5X_mWA3Gx-pYtdNt7')
+```
+
+```{python}
+print(r.json()['dataset_data']['data'][10])
+```
+
+```{python}
+# Convert the returned JSON object into a Python dictionary.
+FSE_AFX_2017 = dict(r.json())
+```
+
+```{python}
+print(FSE_AFX_2017['dataset_data']['data'][0])
+```
+
+```{python}
+# Calculate what the highest and lowest opening prices were for the stock in this period
+highest_open_price = 0
+
+#Set a very high value unlikely to be reached 
+lowest_open_price = 200000000
+for i in range(len(FSE_AFX_2017['dataset_data']['data'])):    
+    if FSE_AFX_2017['dataset_data']['data'][i][1] == None:
+        continue
+    elif FSE_AFX_2017['dataset_data']['data'][i][1] > highest_open_price:
+        highest_open_price = FSE_AFX_2017['dataset_data']['data'][i][1]
+        
+    if FSE_AFX_2017['dataset_data']['data'][i][1] < lowest_open_price:
+        lowest_open_price = FSE_AFX_2017['dataset_data']['data'][i][1]
+    
+print(highest_open_price)
+print(lowest_open_price)
+```
+
+```{python}
+#What was the largest change in any one day (based on High and Low price)
+
+for i in range(len(FSE_AFX_2017['dataset_data']['data'])):
+    if FSE_AFX_2017['dataset_data']['data'][i][2] == None or FSE_AFX_2017['dataset_data']['data'][i][3]  == None:
+        continue
+        
+    if abs(FSE_AFX_2017['dataset_data']['data'][i][2] - FSE_AFX_2017['dataset_data']['data'][i][3]) > highest_difference:
+        highest_difference = abs(FSE_AFX_2017['dataset_data']['data'][i][2] - FSE_AFX_2017['dataset_data']['data'][i][3])
+        
+print(highest_difference)
+```
+
+```{python}
+# What was the largest change between any two days (based on Closing Price)
+largest_change = 0
+for i in range(len(FSE_AFX_2017['dataset_data']['data'])):
+    if FSE_AFX_2017['dataset_data']['data'][i][4] == None:
+        continue
+    for j in range(len(FSE_AFX_2017['dataset_data']['data'])-i):
+        if FSE_AFX_2017['dataset_data']['data'][j][4] == None:
+            continue
+        elif abs(FSE_AFX_2017['dataset_data']['data'][i][4]-FSE_AFX_2017['dataset_data']['data'][j][4]) > largest_change:
+            largest_change = abs(FSE_AFX_2017['dataset_data']['data'][i][4]-FSE_AFX_2017['dataset_data']['data'][j][4])
+            
+print(largest_change)  
+```
+
+```{python}
+# What was the average daily trading volume during this year index 6 
+total_trading_vol = 0
+count= 0 
+for i in range(len(FSE_AFX_2017['dataset_data']['data'])):
+    if FSE_AFX_2017['dataset_data']['data'][i][6] == None:
+        continue
+    else:
+        total_trading_vol += FSE_AFX_2017['dataset_data']['data'][i][6]
+        count += 1
+
+average = total_trading_vol/count
+average
+```
+
+```{python}
+# Median Trading Volume 
+def calculate_median(sequence):
+    '''
+    Caculates median value for any given sequence
+    '''
+    #Sorting sequence in ascending order
+    sequence = sorted(sequence)
+    if len(sequence)%2 != 0:
+        median = sequence[int((len(sequence))/2)]
+    elif len(sequence)%2 == 0:
+        median = sequence[(int(len(seq)/2-1))] + sequence[int((-len(seq)/2))] / 2
+        
+    return median
+    
+```
+
+```{python}
+#Extracting the list of trading volume values 
+trading_volumes = []
+for i in range(len(FSE_AFX_2017['dataset_data']['data'])):
+    if FSE_AFX_2017['dataset_data']['data'][i][6] == None:
+        continue
+    else:
+        trading_volumes.append(FSE_AFX_2017['dataset_data']['data'][i][6])
+    
+```
+
+```{python}
+calculate_median(trading_volumes)
+```
