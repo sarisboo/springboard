@@ -1,0 +1,181 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.1'
+      jupytext_version: 1.1.7
+  kernelspec:
+    display_name: Python 3
+    language: python
+    name: python3
+---
+
+```{python}
+import numpy as np
+import pandas as pd
+import warnings
+from cleaning_funcs import tup_list_maker, is_summary, is_sentence, clean_n_char
+warnings.simplefilter(action='ignore')
+```
+
+```{python}
+# Consists of concatenation of all paragraphs as articles and bold lines as summaries
+wikihow_all = pd.read_csv('./datasets/wikihowAll.csv')
+```
+
+```{python}
+wikihow_all.head()
+```
+
+```{python}
+# Consists of each paragraph and its summary
+wikihow_sep = pd.read_csv('./datasets/wikihowSep.csv')
+```
+
+```{python}
+wikihow_sep.head()
+```
+
+# Picking a Dataset 
+
+## Dataset structuring
+
+In a wikihow article a paragraph's summary usually comes at the begining of the section and is highlighted in bold lines. We need to re-create the classic wikihow structure by appending the `headline` sentence back at the begining of the paragraph for further processing.
+
+* We will create a column called `full_text` where the first line will be the sentence summarizing the whole paragraph.  
+
+* The postion of the sentence at the begining of the paragraph is not representative of a typical text/article structure (other than in a wikihow structure), so if we plan on using some kind of sentence location feature for the summarization it will probably end up not useful in our model just using the wikihow dataset.This problem could later be adressed by adding new and different summaries to the dataset. 
+
+* The `wikihow_sep` dataset seems to be a good starting point for our analysis since it provides the paragraph and the sentence chosen to be its summary. 
+
+```{python}
+# Check the datset decription
+wikihow_sep.describe()
+```
+
+```{python}
+# Select preliminary useful columns 
+wiki_filtered = wikihow_sep[['headline', 'text', 'title']]
+```
+
+```{python}
+# Re-create a full wikihow paragraph
+wiki_filtered['full_text'] = wiki_filtered['headline'] + wiki_filtered['text']
+```
+
+```{python}
+#Reset index for later use
+wiki_filtered = wiki_filtered.reset_index()
+```
+
+```{python}
+# Rename index column to text_id column 
+wiki_filtered['text_id'] = wiki_filtered['index']
+```
+
+```{python}
+# Filter dataframe columns 
+wiki_filtered = wiki_filtered[['text_id', 'full_text', 'title']]
+```
+
+```{python}
+#Explore end of dataframe
+wiki_filtered.tail()
+```
+
+```{python}
+# Split text by sentences   
+wiki_filtered['sentences'] = wiki_filtered['full_text'].apply(lambda x: str(x).split('.') )
+```
+
+```{python}
+wiki_filtered.head()
+```
+
+```{python}
+# Create a list of tuples containing in index0, text_id and in index 1 the list of sentences corresponding to this text 
+tuples = list(zip(wiki_filtered['text_id'], [sentence for sentence in wiki_filtered['sentences']]))
+```
+
+```{python}
+# Apply custom function to identify each setence with its original text
+tup_list = tup_list_maker(tuples)
+```
+
+```{python}
+# Converting the tuples list into a dataframe 
+sentences = pd.DataFrame(tup_list, columns =['text_id', 'sentence'])
+```
+
+```{python}
+#Check the result
+sentences.head()
+```
+
+```{python}
+sentences.tail()
+```
+
+```{python}
+sentences.head(15)
+```
+
+## Further Cleaning 
+
+The sentences have some unwanted characters like blank lines and '\n' at the begining/end and some rows look like they could be deleted, we will explore the dataset to see what needs cleaning.
+
+```{python}
+# Unique repeated values we might not need
+sentences.head()
+```
+
+```{python}
+sentences['is_sentence'] = sentences['sentence'].apply(is_sentence)
+```
+
+```{python}
+#Keep only Dataframe with sentences 
+sentences = sentences[sentences['is_sentence']== True]
+```
+
+```{python}
+# Take off the '\n' character at the begining of some sentences
+sentences['sentence'] = sentences['sentence'].apply(clean_n_char)
+```
+
+## Adding a column specifying if the sentence is part of the summary
+
+To create our labeled dataset, for each sentence, we need to identify if they are part of the final summary or not. In order to do that, we will use a trick with pandas diff function on the `text_id` column which will compare subsequent rows and give us the difference, if this difference is other than 0, then the sentence was part of the summary.
+
+```{python}
+# Add a column specifying if the sentence is part of the summary
+sentences['difference'] = sentences['text_id'].diff()
+```
+
+```{python}
+sentences['is_summary'] = sentences['difference'].apply(is_summary)
+```
+
+```{python}
+sentences.head(15)
+```
+
+## Split Sentences by Words 
+
+Now that we have (mostly) cleaned our dataset, we need to analyse each sentence to later extract the features that we need for our analysis. To analyse our sentences, we need to split them into words and perform some frequency calculations on them.
+
+```{python}
+# Strip leading and ending whitespace
+sentences['sentence'] = sentences['sentence'].apply(lambda sentence: sentence.strip())
+```
+
+```{python}
+# Strip leading and ending whitespace
+sentences['words'] = sentences['sentence'].apply(lambda sentence: sentence.split(' '))
+```
+
+```{python}
+sentences.head(15)
+```
