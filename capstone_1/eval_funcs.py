@@ -71,3 +71,12 @@ def calculate_recall_distribution(df, predictions, y_test):
         recalls.append((identifier, recall))
 
     return recalls
+
+
+def recreate_summaries(df, prediction='predictions', summary='is_summary', sentences='sentence'):
+    real_summary = df[df[summary] == 1][sentences]
+    real_summary.str.cat(sep='.')
+    pred_summary = df[df[prediction] == 1][sentences]
+
+    print(
+        f"Real Summary: \n\n{real_summary.str.cat(sep='. ')} \n\nPredicted Summary: \n\n{pred_summary.str.cat(sep='. ')}")
