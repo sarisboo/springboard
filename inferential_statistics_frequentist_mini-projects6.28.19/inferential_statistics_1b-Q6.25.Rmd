@@ -162,7 +162,7 @@ t_stat
 ```
 
 ```{python}
-ttest_ind_from_stats(np.mean(insurance), np.std(insurance), len(insurance), np.mean(no_insurance), np.std(no_insurance), len(no_insurance))
+ttest_ind_from_stats(np.mean(insurance), np.std(insurance), len(insurance), np.mean(no_insurance), np.std(no_insurance), len(no_insurance), equal_var=False)
 ```
 
 Congratulations! Hopefully you got the exact same numerical results. This shows that you correctly calculated the numbers by hand. Secondly, you used the correct function and saw that it's much easier to use. All you need to do pass your data to it.
@@ -192,3 +192,7 @@ Having completed this project notebook, you now have good hands-on experience:
 * performing inference using such data to answer business questions
 * forming a hypothesis and framing the null and alternative hypotheses
 * testing this using a _t_-test
+
+```{python}
+
+```

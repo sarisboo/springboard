@@ -391,7 +391,7 @@ mean
 ```
 
 ```{python}
-std= np.std(samples, ddof = 1)
+std= np.std(samples, ddof = 1)/np.sqrt(50)
 ```
 
 ```{python}
@@ -399,7 +399,7 @@ norm.ppf(q=0.025,loc=np.mean(samples),scale=std)
 ```
 
 ```{python}
-mean - norm.ppf(q=0.0025,loc=mean,scale=std)
+mean - norm.ppf(q=0.025,loc=mean,scale=std)
 ```
 
 __Q:__ Above we calculated the confidence interval using the critical z value. What is the problem with this? What requirement, or requirements, are we (strictly) failing?
@@ -414,15 +414,11 @@ __Q:__ Calculate the 95% confidence interval for the mean using the _t_ distribu
 __A:__
 
 ```{python}
-mean - t.ppf(0.0025, 49, loc=mean, scale=std)
+mean - t.ppf(0.025, 49, loc=mean, scale=std)
 ```
 
 ```{python}
 # It is wider than the normal distribution
-```
-
-```{python}
-
 ```
 
 This is slightly wider than the previous confidence interval. This reflects the greater uncertainty given that we are estimating population parameters from a sample.
