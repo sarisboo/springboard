@@ -1,0 +1,9 @@
+**/.ipynb_checkpoints/
+__pycache__/
+
+data_cleaning/
+Ex_Files_Python_Statistics_EssT/
+
+*.Rmd
+*.csv
+*.xlsx
