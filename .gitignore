@@ -59,3 +59,6 @@ Ex_Files_Python_Statistics_EssT/
 # Datasets
 *.csv
 *.xlsx
+*.npz
+*.pdf
+*.txt
